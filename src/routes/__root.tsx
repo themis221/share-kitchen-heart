@@ -83,13 +83,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Save, scan, and share recipes with the people you cook with. A warm home for every recipe you love.",
       },
-      { property: "og:title", content: "The Kitchen Table" },
+      { property: "og:title", content: "The Kitchen Table — your personal recipe database" },
       {
         property: "og:description",
-        content: "Save, scan, and share recipes with the people you cook with.",
+        content: "Save, scan, and share recipes with the people you cook with. A warm home for every recipe you love.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "The Kitchen Table — your personal recipe database" },
+      { name: "twitter:description", content: "Save, scan, and share recipes with the people you cook with. A warm home for every recipe you love." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/62b1fe06-d631-4588-9a0b-fd0625d6675c/id-preview-749cecc5--8829ca15-c390-47ee-9997-60ff4be169cc.lovable.app-1784497524055.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/62b1fe06-d631-4588-9a0b-fd0625d6675c/id-preview-749cecc5--8829ca15-c390-47ee-9997-60ff4be169cc.lovable.app-1784497524055.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
