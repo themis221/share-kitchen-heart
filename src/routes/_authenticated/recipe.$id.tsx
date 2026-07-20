@@ -140,9 +140,18 @@ function RecipeDetail() {
             <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-ink/60 mb-3">
               Ingredients
             </h2>
-            <div className="rounded-[16px] bg-creme/60 ring-1 ring-black/5 p-5 whitespace-pre-line text-sm leading-relaxed">
-              {recipe.ingredients}
-            </div>
+            <ul className="rounded-[16px] bg-creme/60 ring-1 ring-black/5 p-5 text-sm leading-relaxed space-y-2.5">
+              {recipe.ingredients
+                .split("\n")
+                .map((l) => l.trim())
+                .filter(Boolean)
+                .map((line, i) => (
+                  <li key={i} className="flex gap-2.5">
+                    <span className="mt-2 size-1.5 rounded-full bg-clay/70 shrink-0" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+            </ul>
           </section>
         )}
 
@@ -151,9 +160,20 @@ function RecipeDetail() {
             <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-ink/60 mb-3">
               Instructions
             </h2>
-            <div className="whitespace-pre-line text-[15px] leading-relaxed text-ink/85">
-              {recipe.instructions}
-            </div>
+            <ol className="text-[15px] leading-relaxed text-ink/85 space-y-4">
+              {recipe.instructions
+                .split("\n")
+                .map((l) => l.replace(/^\s*\d+[\.\)]\s*/, "").trim())
+                .filter(Boolean)
+                .map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="font-serif text-clay text-lg leading-none pt-0.5 shrink-0 w-6">
+                      {i + 1}.
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+            </ol>
           </section>
         )}
 
