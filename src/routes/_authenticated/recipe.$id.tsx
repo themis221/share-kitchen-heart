@@ -22,11 +22,17 @@ function RecipeDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("recipes")
-        .select("*,profiles!recipes_owner_id_fkey(display_name)")
+        .select("*")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", data.owner_id)
+        .maybeSingle();
+      return { ...data, profiles: ownerProfile };
     },
   });
 
@@ -35,13 +41,23 @@ function RecipeDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("recipe_shares")
-        .select("id,shared_with,profiles!recipe_shares_shared_with_fkey(display_name,email)")
+        .select("id,shared_with")
         .eq("recipe_id", id);
       if (error) throw error;
-      return data;
+      if (!data?.length) return [];
+      const ids = data.map((s) => s.shared_with);
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id,display_name,email")
+        .in("id", ids);
+      return data.map((s) => ({
+        ...s,
+        profiles: profs?.find((p) => p.id === s.shared_with) ?? null,
+      }));
     },
     enabled: !!recipe && recipe.owner_id === user.id,
   });
+
 
   if (isLoading) {
     return <div className="p-8 text-center text-ink/50 text-sm">Loading…</div>;
