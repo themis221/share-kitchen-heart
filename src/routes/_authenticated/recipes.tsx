@@ -36,7 +36,7 @@ function RecipesScreen() {
       const { data, error } = await supabase
         .from("recipe_shares")
         .select(
-          "created_at,recipes(id,title,description,image_url,created_at),profiles!recipe_shares_shared_by_fkey(display_name)",
+          "created_at,recipes(id,title,description,image_url,created_at),profiles!recipe_shares_shared_by_profiles_fkey(display_name)",
         )
         .eq("shared_with", user.id)
         .order("created_at", { ascending: false });

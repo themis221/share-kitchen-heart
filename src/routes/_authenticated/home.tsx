@@ -30,7 +30,7 @@ function HomeScreen() {
       const { data, error } = await supabase
         .from("recipe_shares")
         .select(
-          "created_at,shared_by,recipes(id,title,description,image_url),profiles!recipe_shares_shared_by_fkey(display_name,avatar_url)",
+          "created_at,shared_by,recipes(id,title,description,image_url),profiles!recipe_shares_shared_by_profiles_fkey(display_name,avatar_url)",
         )
         .eq("shared_with", user.id)
         .order("created_at", { ascending: false })
