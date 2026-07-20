@@ -3,8 +3,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScreenHeader } from "@/components/ui-bits";
 import { toast } from "sonner";
-import { Sparkles, PenLine, Camera, Link as LinkIcon, ArrowLeft } from "lucide-react";
+import { Sparkles, PenLine, Camera, Link as LinkIcon, ArrowLeft, Plus, X } from "lucide-react";
 import { scanRecipe } from "@/lib/scan-recipe.functions";
+
 
 export const Route = createFileRoute("/_authenticated/add")({
   component: AddScreen,
