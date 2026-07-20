@@ -349,24 +349,40 @@ function ScanView({
         </div>
 
         {mode === "photo" ? (
-          <label className="block aspect-[4/5] rounded-[22px] border-2 border-dashed border-ink/15 bg-creme/40 cursor-pointer overflow-hidden relative">
-            {imageData ? (
-              <img src={imageData} alt="Recipe" className="w-full h-full object-cover" />
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center px-8">
-                <Camera size={28} className="text-ink/40 mb-3" strokeWidth={1.5} />
-                <p className="font-serif text-xl mb-1">Take or upload a photo</p>
-                <p className="text-xs text-ink/50">AI will read the ingredients & steps.</p>
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
-            />
-
-          </label>
+          <div className="space-y-3">
+            <div className="aspect-[4/5] rounded-[22px] border-2 border-dashed border-ink/15 bg-creme/40 overflow-hidden relative">
+              {imageData ? (
+                <img src={imageData} alt="Recipe" className="w-full h-full object-cover" />
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center px-8">
+                  <Camera size={28} className="text-ink/40 mb-3" strokeWidth={1.5} />
+                  <p className="font-serif text-xl mb-1">Add a recipe photo</p>
+                  <p className="text-xs text-ink/50">AI will read the ingredients & steps.</p>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="rounded-full bg-ink text-paper py-3 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform">
+                <Camera size={14} /> Take photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
+                />
+              </label>
+              <label className="rounded-full bg-creme text-ink py-3 text-xs font-medium flex items-center justify-center gap-1.5 ring-1 ring-black/5 cursor-pointer active:scale-[0.98] transition-transform">
+                <LinkIcon size={14} /> Upload
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
+                />
+              </label>
+            </div>
+          </div>
         ) : (
           <textarea
             rows={10}
