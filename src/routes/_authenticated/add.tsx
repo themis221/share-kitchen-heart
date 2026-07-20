@@ -3,8 +3,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScreenHeader } from "@/components/ui-bits";
 import { toast } from "sonner";
-import { Sparkles, PenLine, Camera, Link as LinkIcon, ArrowLeft } from "lucide-react";
+import { Sparkles, PenLine, Camera, Link as LinkIcon, ArrowLeft, Plus, X } from "lucide-react";
 import { scanRecipe } from "@/lib/scan-recipe.functions";
+
 
 export const Route = createFileRoute("/_authenticated/add")({
   component: AddScreen,
@@ -86,19 +87,31 @@ function ManualView({
   const [f, setF] = useState({
     title: "",
     description: "",
-    ingredients: "",
-    instructions: "",
     prep_time: "",
     servings: "",
   });
+  const [ingredients, setIngredients] = useState<string[]>([""]);
+  const [instructions, setInstructions] = useState<string[]>([""]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
+      const cleanIngredients = ingredients.map((s) => s.trim()).filter(Boolean).join("\n");
+      const cleanInstructions = instructions
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s, i) => `${i + 1}. ${s}`)
+        .join("\n");
       const { data, error } = await supabase
         .from("recipes")
-        .insert({ ...f, owner_id: userId, source: "manual" })
+        .insert({
+          ...f,
+          ingredients: cleanIngredients,
+          instructions: cleanInstructions,
+          owner_id: userId,
+          source: "manual",
+        })
         .select("id")
         .single();
       if (error) throw error;
@@ -149,24 +162,25 @@ function ManualView({
             />
           </Field>
         </div>
-        <Field label="Ingredients">
-          <textarea
-            rows={5}
-            value={f.ingredients}
-            onChange={(e) => setF({ ...f, ingredients: e.target.value })}
-            className="input"
-            placeholder={"500g flour\n10g salt\n7g yeast\n..."}
-          />
-        </Field>
-        <Field label="Instructions">
-          <textarea
-            rows={6}
-            value={f.instructions}
-            onChange={(e) => setF({ ...f, instructions: e.target.value })}
-            className="input"
-            placeholder="Mix flour and water..."
-          />
-        </Field>
+
+        <LineList
+          label="Ingredients"
+          items={ingredients}
+          onChange={setIngredients}
+          placeholder="e.g. 500g flour"
+          addLabel="Add ingredient"
+        />
+
+        <LineList
+          label="Instructions"
+          items={instructions}
+          onChange={setInstructions}
+          placeholder="Describe the step…"
+          addLabel="Add step"
+          numbered
+          multiline
+        />
+
         <button
           type="submit"
           disabled={busy}
@@ -179,6 +193,89 @@ function ManualView({
     </div>
   );
 }
+
+function LineList({
+  label,
+  items,
+  onChange,
+  placeholder,
+  addLabel,
+  numbered,
+  multiline,
+}: {
+  label: string;
+  items: string[];
+  onChange: (next: string[]) => void;
+  placeholder: string;
+  addLabel: string;
+  numbered?: boolean;
+  multiline?: boolean;
+}) {
+  function update(i: number, v: string) {
+    const next = items.slice();
+    next[i] = v;
+    onChange(next);
+  }
+  function remove(i: number) {
+    const next = items.filter((_, idx) => idx !== i);
+    onChange(next.length ? next : [""]);
+  }
+  function add() {
+    onChange([...items, ""]);
+  }
+  return (
+    <div>
+      <span className="text-[11px] font-medium uppercase tracking-widest text-ink/55 mb-1.5 inline-block">
+        {label}
+      </span>
+      <div className="space-y-2">
+        {items.map((val, i) => (
+          <div key={i} className="flex items-start gap-2">
+            {numbered && (
+              <div className="mt-3 size-6 rounded-full bg-creme text-ink/60 text-xs grid place-items-center ring-1 ring-black/5 shrink-0">
+                {i + 1}
+              </div>
+            )}
+            {multiline ? (
+              <textarea
+                rows={2}
+                value={val}
+                onChange={(e) => update(i, e.target.value)}
+                className="input flex-1"
+                placeholder={placeholder}
+              />
+            ) : (
+              <input
+                value={val}
+                onChange={(e) => update(i, e.target.value)}
+                className="input flex-1"
+                placeholder={placeholder}
+              />
+            )}
+            {items.length > 1 && (
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="mt-2 size-8 rounded-full bg-creme grid place-items-center ring-1 ring-black/5 text-ink/60 shrink-0"
+                aria-label="Remove"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={add}
+        className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-clay px-3 py-1.5 rounded-full ring-1 ring-clay/30 hover:bg-clay/5"
+      >
+        <Plus size={14} /> {addLabel}
+      </button>
+    </div>
+  );
+}
+
 
 function ScanView({
   userId,
@@ -265,10 +362,10 @@ function ScanView({
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
             />
+
           </label>
         ) : (
           <textarea
