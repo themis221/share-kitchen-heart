@@ -2,10 +2,61 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScreenHeader, Avatar, RecipeThumb, relativeTime } from "@/components/ui-bits";
+import { Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/home")({
   component: HomeScreen,
 });
+
+async function fetchSharedFeed(userId: string, limit: number) {
+  // Any recipe I can see that isn't mine (RLS covers person + team shares)
+  const { data: recipes, error } = await supabase
+    .from("recipes")
+    .select("id,title,description,image_url,created_at,owner_id")
+    .neq("owner_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  if (!recipes?.length) return [];
+
+  const recipeIds = recipes.map((r) => r.id);
+  const ownerIds = Array.from(new Set(recipes.map((r) => r.owner_id)));
+
+  const [ownersRes, teamSharesRes] = await Promise.all([
+    supabase.from("profiles").select("id,display_name,avatar_url").in("id", ownerIds),
+    supabase
+      .from("recipe_team_shares")
+      .select("recipe_id,team_id")
+      .in("recipe_id", recipeIds),
+  ]);
+
+  const owners = new Map((ownersRes.data ?? []).map((p) => [p.id, p]));
+  const teamShareByRecipe = new Map<string, string[]>();
+  (teamSharesRes.data ?? []).forEach((ts) => {
+    const arr = teamShareByRecipe.get(ts.recipe_id) ?? [];
+    arr.push(ts.team_id);
+    teamShareByRecipe.set(ts.recipe_id, arr);
+  });
+
+  const teamIds = Array.from(
+    new Set(Array.from(teamShareByRecipe.values()).flat()),
+  );
+  const teamNames = new Map<string, string>();
+  if (teamIds.length) {
+    const { data: teams } = await supabase.from("teams").select("id,name").in("id", teamIds);
+    (teams ?? []).forEach((t) => teamNames.set(t.id, t.name));
+  }
+
+  return recipes.map((r) => {
+    const ownerProfile = owners.get(r.owner_id) ?? null;
+    const teamId = teamShareByRecipe.get(r.id)?.[0];
+    return {
+      ...r,
+      owner: ownerProfile,
+      teamName: teamId ? teamNames.get(teamId) ?? null : null,
+    };
+  });
+}
 
 function HomeScreen() {
   const { user } = Route.useRouteContext();
@@ -26,18 +77,7 @@ function HomeScreen() {
 
   const { data: shared } = useQuery({
     queryKey: ["recipes", "shared", user.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("recipe_shares")
-        .select(
-          "created_at,shared_by,recipes(id,title,description,image_url),profiles!recipe_shares_shared_by_profiles_fkey(display_name,avatar_url)",
-        )
-        .eq("shared_with", user.id)
-        .order("created_at", { ascending: false })
-        .limit(6);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchSharedFeed(user.id, 6),
   });
 
   const displayName =
@@ -84,11 +124,7 @@ function HomeScreen() {
             ))}
           </div>
         ) : (
-          <EmptyBlock
-            title="No recipes yet"
-            cta="Add your first recipe"
-            to="/add"
-          />
+          <EmptyBlock title="No recipes yet" cta="Add your first recipe" to="/add" />
         )}
       </section>
 
@@ -99,20 +135,23 @@ function HomeScreen() {
         </h2>
         {shared && shared.length > 0 ? (
           <div className="space-y-3">
-            {shared.map((s: any) => (
+            {shared.map((s) => (
               <Link
-                key={`${s.recipes?.id}-${s.shared_by}`}
+                key={s.id}
                 to="/recipe/$id"
-                params={{ id: s.recipes?.id }}
+                params={{ id: s.id }}
                 className="flex items-center p-3 bg-creme/60 rounded-[14px] ring-1 ring-black/5 gap-3"
               >
-                <Avatar name={s.profiles?.display_name} className="size-10 shrink-0" />
+                <Avatar name={s.owner?.display_name ?? "Cook"} className="size-10 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-serif text-base leading-tight truncate">
-                    {s.recipes?.title ?? "Untitled"}
-                  </h4>
-                  <p className="text-xs text-ink/55 truncate">
-                    From {s.profiles?.display_name ?? "a friend"} • {relativeTime(s.created_at)}
+                  <h4 className="font-serif text-base leading-tight truncate">{s.title}</h4>
+                  <p className="text-xs text-ink/55 truncate flex items-center gap-1.5">
+                    From {s.owner?.display_name ?? "a friend"}
+                    {s.teamName && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-moss/15 text-moss text-[10px] font-medium">
+                        <Users size={9} strokeWidth={2} /> {s.teamName}
+                      </span>
+                    )}
                   </p>
                 </div>
               </Link>

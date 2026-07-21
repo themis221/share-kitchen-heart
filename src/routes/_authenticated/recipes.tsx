@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { ScreenHeader, RecipeThumb, relativeTime } from "@/components/ui-bits";
+import { Users } from "lucide-react";
 
 const searchSchema = z.object({
   tab: z.enum(["mine", "shared"]).optional().default("mine"),
@@ -33,29 +34,49 @@ function RecipesScreen() {
   const shared = useQuery({
     queryKey: ["recipes", "shared-list", user.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("recipe_shares")
-        .select(
-          "created_at,recipes(id,title,description,image_url,created_at),profiles!recipe_shares_shared_by_profiles_fkey(display_name)",
-        )
-        .eq("shared_with", user.id)
+      const { data: recipes, error } = await supabase
+        .from("recipes")
+        .select("id,title,description,image_url,created_at,owner_id")
+        .neq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      if (!recipes?.length) return [];
+      const ownerIds = Array.from(new Set(recipes.map((r) => r.owner_id)));
+      const [{ data: profs }, { data: ts }] = await Promise.all([
+        supabase.from("profiles").select("id,display_name").in("id", ownerIds),
+        supabase
+          .from("recipe_team_shares")
+          .select("recipe_id,team_id")
+          .in("recipe_id", recipes.map((r) => r.id)),
+      ]);
+      const teamIds = Array.from(new Set((ts ?? []).map((t) => t.team_id)));
+      const teamNames = new Map<string, string>();
+      if (teamIds.length) {
+        const { data: teams } = await supabase
+          .from("teams")
+          .select("id,name")
+          .in("id", teamIds);
+        (teams ?? []).forEach((t) => teamNames.set(t.id, t.name));
+      }
+      const teamByRecipe = new Map<string, string>();
+      (ts ?? []).forEach((row) => {
+        if (!teamByRecipe.has(row.recipe_id)) {
+          const name = teamNames.get(row.team_id);
+          if (name) teamByRecipe.set(row.recipe_id, name);
+        }
+      });
+      return recipes.map((r) => ({
+        ...r,
+        sharer: profs?.find((p) => p.id === r.owner_id)?.display_name ?? null,
+        teamName: teamByRecipe.get(r.id) ?? null,
+      }));
     },
   });
 
   const list =
     tab === "mine"
-      ? mine.data?.map((r) => ({ ...r, sharer: null as string | null }))
-      : shared.data?.map((s: any) => ({
-          id: s.recipes?.id,
-          title: s.recipes?.title,
-          description: s.recipes?.description,
-          image_url: s.recipes?.image_url,
-          created_at: s.created_at,
-          sharer: s.profiles?.display_name as string | null,
-        }));
+      ? mine.data?.map((r) => ({ ...r, sharer: null as string | null, teamName: null as string | null }))
+      : shared.data;
 
   return (
     <div>
@@ -84,8 +105,13 @@ function RecipesScreen() {
                 <h3 className="font-serif text-base leading-tight text-balance line-clamp-2">
                   {r.title}
                 </h3>
-                <p className="text-[11px] text-ink/50 mt-0.5">
+                <p className="text-[11px] text-ink/50 mt-0.5 flex items-center gap-1">
                   {r.sharer ? `From ${r.sharer}` : relativeTime(r.created_at)}
+                  {r.teamName && (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-moss/15 text-moss text-[9px] font-medium">
+                      <Users size={8} strokeWidth={2} /> {r.teamName}
+                    </span>
+                  )}
                 </p>
               </Link>
             ))}
