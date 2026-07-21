@@ -16,6 +16,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedRecipesRouteImport } from './routes/_authenticated/recipes'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated/add'
+import { Route as AuthenticatedTeamIdRouteImport } from './routes/_authenticated/team.$id'
 import { Route as AuthenticatedRecipeIdRouteImport } from './routes/_authenticated/recipe.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -52,6 +53,11 @@ const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTeamIdRoute = AuthenticatedTeamIdRouteImport.update({
+  id: '/team/$id',
+  path: '/team/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRecipeIdRoute = AuthenticatedRecipeIdRouteImport.update({
   id: '/recipe/$id',
   path: '/recipe/$id',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/recipes': typeof AuthenticatedRecipesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/recipe/$id': typeof AuthenticatedRecipeIdRoute
+  '/team/$id': typeof AuthenticatedTeamIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/recipes': typeof AuthenticatedRecipesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/recipe/$id': typeof AuthenticatedRecipeIdRoute
+  '/team/$id': typeof AuthenticatedTeamIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/_authenticated/recipes': typeof AuthenticatedRecipesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/recipe/$id': typeof AuthenticatedRecipeIdRoute
+  '/_authenticated/team/$id': typeof AuthenticatedTeamIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/recipes'
     | '/settings'
     | '/recipe/$id'
+    | '/team/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/recipes'
     | '/settings'
     | '/recipe/$id'
+    | '/team/$id'
   id:
     | '__root__'
     | '/'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recipes'
     | '/_authenticated/settings'
     | '/_authenticated/recipe/$id'
+    | '/_authenticated/team/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -175,6 +187,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAddRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/team/$id': {
+      id: '/_authenticated/team/$id'
+      path: '/team/$id'
+      fullPath: '/team/$id'
+      preLoaderRoute: typeof AuthenticatedTeamIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/recipe/$id': {
       id: '/_authenticated/recipe/$id'
       path: '/recipe/$id'
@@ -191,6 +210,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRecipesRoute: typeof AuthenticatedRecipesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedRecipeIdRoute: typeof AuthenticatedRecipeIdRoute
+  AuthenticatedTeamIdRoute: typeof AuthenticatedTeamIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -199,6 +219,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRecipesRoute: AuthenticatedRecipesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedRecipeIdRoute: AuthenticatedRecipeIdRoute,
+  AuthenticatedTeamIdRoute: AuthenticatedTeamIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
