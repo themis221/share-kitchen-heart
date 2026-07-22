@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS on_team_created ON public.teams;
