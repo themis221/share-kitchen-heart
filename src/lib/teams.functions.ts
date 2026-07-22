@@ -11,12 +11,11 @@ export const createTeam = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((value: unknown) => CreateTeamInput.parse(value))
   .handler(async ({ context, data }) => {
-    const { data: team, error } = await context.supabase
+    const id = crypto.randomUUID();
+    const { error } = await context.supabase
       .from("teams")
-      .insert({ name: data.name, created_by: context.userId })
-      .select("id")
-      .single();
+      .insert({ id, name: data.name, created_by: context.userId });
 
     if (error) throw new Error(error.message);
-    return team;
+    return { id };
   });
