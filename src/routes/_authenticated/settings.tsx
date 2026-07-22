@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScreenHeader, Avatar } from "@/components/ui-bits";
 import { toast } from "sonner";
 import { Moon, LogOut, Users, Plus, ChevronRight, X } from "lucide-react";
+import { createTeam } from "@/lib/teams.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsScreen,
@@ -179,7 +180,6 @@ function SettingsScreen() {
 
       {creatingTeam && (
         <CreateTeamSheet
-          userId={user.id}
           onClose={() => setCreatingTeam(false)}
           onCreated={(teamId) => {
             setCreatingTeam(false);
@@ -233,11 +233,9 @@ function Switch({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 }
 
 function CreateTeamSheet({
-  userId,
   onClose,
   onCreated,
 }: {
-  userId: string;
   onClose: () => void;
   onCreated: (id: string) => void;
 }) {
@@ -249,12 +247,7 @@ function CreateTeamSheet({
     if (!trimmed) return;
     setBusy(true);
     try {
-      const { data, error } = await supabase
-        .from("teams")
-        .insert({ name: trimmed, created_by: userId })
-        .select("id")
-        .single();
-      if (error) throw error;
+      const data = await createTeam({ data: { name: trimmed } });
       onCreated(data.id);
     } catch (err: any) {
       toast.error(err.message ?? "Couldn't create team");
