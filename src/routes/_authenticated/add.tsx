@@ -104,20 +104,19 @@ function ManualView({
         .filter(Boolean)
         .map((s, i) => `${i + 1}. ${s}`)
         .join("\n");
-      const { data, error } = await supabase
-        .from("recipes")
-        .insert({
-          ...f,
+      const { id } = await createRecipe({
+        data: {
+          title: f.title,
+          description: f.description,
+          prep_time: f.prep_time,
+          servings: f.servings,
           ingredients: cleanIngredients,
           instructions: cleanInstructions,
-          owner_id: userId,
           source: "manual",
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
+        },
+      });
       toast.success("Recipe saved");
-      onDone(data.id);
+      onDone(id);
     } catch (err: any) {
       toast.error(err.message ?? "Save failed");
       setBusy(false);
