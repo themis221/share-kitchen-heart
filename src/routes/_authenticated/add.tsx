@@ -5,6 +5,7 @@ import { ScreenHeader } from "@/components/ui-bits";
 import { toast } from "sonner";
 import { Sparkles, PenLine, Camera, Link as LinkIcon, ArrowLeft, Plus, X } from "lucide-react";
 import { scanRecipe } from "@/lib/scan-recipe.functions";
+import { createRecipe } from "@/lib/recipes.functions";
 
 
 export const Route = createFileRoute("/_authenticated/add")({
