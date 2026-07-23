@@ -5,6 +5,7 @@ import { ScreenHeader } from "@/components/ui-bits";
 import { toast } from "sonner";
 import { Sparkles, PenLine, Camera, Link as LinkIcon, ArrowLeft, Plus, X } from "lucide-react";
 import { scanRecipe } from "@/lib/scan-recipe.functions";
+import { createRecipe } from "@/lib/recipes.functions";
 
 
 export const Route = createFileRoute("/_authenticated/add")({
@@ -103,20 +104,19 @@ function ManualView({
         .filter(Boolean)
         .map((s, i) => `${i + 1}. ${s}`)
         .join("\n");
-      const { data, error } = await supabase
-        .from("recipes")
-        .insert({
-          ...f,
+      const { id } = await createRecipe({
+        data: {
+          title: f.title,
+          description: f.description,
+          prep_time: f.prep_time,
+          servings: f.servings,
           ingredients: cleanIngredients,
           instructions: cleanInstructions,
-          owner_id: userId,
           source: "manual",
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
+        },
+      });
       toast.success("Recipe saved");
-      onDone(data.id);
+      onDone(id);
     } catch (err: any) {
       toast.error(err.message ?? "Save failed");
       setBusy(false);
@@ -303,10 +303,8 @@ function ScanView({
       const parsed = await scanRecipe({
         data: mode === "photo" ? { imageData: imageData! } : { text },
       });
-      const { data, error } = await supabase
-        .from("recipes")
-        .insert({
-          owner_id: userId,
+      const { id } = await createRecipe({
+        data: {
           source: "ai_scan",
           title: parsed.title,
           description: parsed.description,
@@ -314,12 +312,10 @@ function ScanView({
           instructions: parsed.instructions,
           prep_time: parsed.prep_time,
           servings: parsed.servings,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
+        },
+      });
       toast.success("Recipe scanned & saved");
-      onDone(data.id);
+      onDone(id);
     } catch (err: any) {
       toast.error(err.message ?? "Scan failed");
       setBusy(false);
