@@ -303,10 +303,8 @@ function ScanView({
       const parsed = await scanRecipe({
         data: mode === "photo" ? { imageData: imageData! } : { text },
       });
-      const { data, error } = await supabase
-        .from("recipes")
-        .insert({
-          owner_id: userId,
+      const { id } = await createRecipe({
+        data: {
           source: "ai_scan",
           title: parsed.title,
           description: parsed.description,
@@ -314,12 +312,10 @@ function ScanView({
           instructions: parsed.instructions,
           prep_time: parsed.prep_time,
           servings: parsed.servings,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
+        },
+      });
       toast.success("Recipe scanned & saved");
-      onDone(data.id);
+      onDone(id);
     } catch (err: any) {
       toast.error(err.message ?? "Scan failed");
       setBusy(false);
