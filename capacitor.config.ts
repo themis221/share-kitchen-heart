@@ -4,10 +4,10 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.sharekitchenheart',
   appName: 'Share Kitchen Heart',
   webDir: 'dist',
-  server: {
-    url: 'https://share-kitchen-heart.lovable.app',
-    cleartext: false,
-  },
+
+  android: {
+    allowMixedContent: false
+  }
 };
 
 export default config;
