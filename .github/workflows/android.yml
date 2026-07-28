@@ -40,8 +40,7 @@ jobs:
           echo "Root files:"
           ls -la
           echo "Build directories:"
-          find . -maxdepth 2 -type d -name "dist" -o -name ".output" -o -name "build"
-
+          find . -maxdepth 2 -type d \( -name "dist" -o -name ".output" -o -name "build" \)
       - name: Capacitor Sync
         run: npx cap sync android
 
