@@ -33,7 +33,14 @@ jobs:
         run: npm ci
 
       - name: Build web app
-        run: npm run build
+        run: |
+          npm run build
+          echo "Current directory:"
+          pwd
+          echo "Root files:"
+          ls -la
+          echo "Build directories:"
+          find . -maxdepth 2 -type d -name "dist" -o -name ".output" -o -name "build"
 
       - name: Capacitor Sync
         run: npx cap sync android
